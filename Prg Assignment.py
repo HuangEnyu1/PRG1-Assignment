@@ -1,6 +1,6 @@
 # PRG1 Assignment 
 # Name: Huang Enyu
-# Student ID: S10274277E testing
+# Student ID: S10274277E 
 
 import json
 from random import randint
@@ -252,6 +252,11 @@ def main():
 
 main()
 
-
-
-
+# Advanced Feature 1: Input Validation (10 marks)
+def get_valid_input(prompt, valid_options):
+    while True:
+        choice = input(prompt).lower()
+        if choice in valid_options:
+            return choice
+        else:
+            print(f"Invalid option. Choose from {', '.join(valid_options).upper()}.")
