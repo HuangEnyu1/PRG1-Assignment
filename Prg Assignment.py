@@ -344,7 +344,7 @@ def enter_mine(game_map, fog, player):
                         player[ore] += actual
                         player['load'] += actual
                     else:
-                        print("You are over-encumbered!")
+                        print("Your backpack is full!")
                         continue
                 elif tile == 'T':
                     print("Returned to town.")
@@ -374,3 +374,94 @@ def enter_mine(game_map, fog, player):
         print(f"Sold ore for {total} GP. Total GP: {player['GP']}")
     player['turns'] = TURNS_PER_DAY
     player['day'] += 1
+
+# Advanced Feature 3: Top Scores (5 marks)
+def save_score():
+    scores = []
+    try:
+        with open("scores.json", "r") as f:
+            scores = json.load(f)
+    except FileNotFoundError:
+        pass
+
+    scores.append({
+        'name': player['name'],
+        'days': player['day'],
+        'steps': player['steps'],
+        'GP': player['GP']
+    })
+
+    scores = sorted(scores, key=lambda x: (x['days'], x['steps'], -x['GP']))[:5]
+
+    with open("scores.json", "w") as f:
+        json.dump(scores, f)
+
+def view_top_scores():
+    try:
+        with open("scores.json", "r") as f:
+            scores = json.load(f)
+        print("\nTop 5 Scores:")
+        print("-----------------------------")
+        for idx, s in enumerate(scores, 1):
+            print(f"{idx}. {s['name']} - {s['days']} days, {s['steps']} steps, {s['GP']} GP")
+    except FileNotFoundError:
+        print("No scores yet.")
+
+# Modify main menu to include top scores
+
+def show_main_menu():
+    print("\n--- Main Menu ----")
+    print("(N)ew Game")
+    print("(L)oad Saved Game")
+    print("(T)op Scores")
+    print("(Q)uit Game")
+    print("------------------")
+
+# Update main game loop to handle top score
+
+def main():
+    global player, game_map, fog
+    print("---------------- Welcome to Sundrop Caves! ----------------")
+    print("You spent all your money to get the deed to a mine, a small")
+    print("  backpack, a simple pickaxe and a magical portal stone.")
+    print("\nHow quickly can you get the 500 GP you need to retire")
+    print("  and live happily ever after?")
+    print("------------------------------------------------------------")
+
+    game_state = 'main'
+    while True:
+        if game_state == 'main':
+            show_main_menu()
+            choice = get_valid_input("Your choice? ", ['n', 'l', 't', 'q'])
+            if choice == 'n':
+                initialize_game(game_map, fog, player)
+                player['pickaxe'] = 1
+                game_state = 'town'
+            elif choice == 'l':
+                if load_game():
+                    game_state = 'town'
+            elif choice == 't':
+                view_top_scores()
+            elif choice == 'q':
+                print("Goodbye!")
+                break
+
+        elif game_state == 'town':
+            show_town_menu()
+            choice = get_valid_input("Your choice? ", ['b', 'i', 'm', 'e', 'v', 'q'])
+            if choice == 'b':
+                buy_stuff(player)
+            elif choice == 'i':
+                show_information(player)
+            elif choice == 'm':
+                draw_map(game_map, fog, player)
+            elif choice == 'e':
+                enter_mine(game_map, fog, player)
+                if player['GP'] >= WIN_GP:
+                    print(f"\nYou earned {player['GP']} GP and retired in {player['day']} days!")
+                    save_score()
+                    game_state = 'main'
+            elif choice == 'v':
+                save_game()
+            elif choice == 'q':
+                game_state = 'main'
