@@ -110,97 +110,119 @@ def show_town_menu():
 
 def buy_stuff(player):
     while True:
-        print("\nShop:")
-        print("(B)ackpack Upgrade")
-        print("(L)eave Shop")
-        print(f"GP: {player['GP']}")
-        choice = input("Your choice? ").lower()
+        print("\n----------------------- Shop Menu -------------------------")
+        level = player.get('pickaxe', 1)
+        if level < 3:
+            upgrade_cost = 50 if level == 1 else 150
+            next_level_name = get_pickaxe_level_name(level + 1)
+            print(f"(P)ickaxe upgrade to Level {level + 1} to mine {next_level_name} ore for {upgrade_cost} GP")
+
+        # Improved backpack upgrade message
+        current_capacity = player['capacity']
+        upgrade_cost = current_capacity * 2
+        new_capacity = current_capacity + 2
+        print(f"(P)ickaxe upgrade to carry {new_capacity} items for {upgrade_cost} GP")
+
+        print("(L)eave shop")
+        print("-----------------------------------------------------------")
+        print(f"GP: {player{'GP'}}")
+        print("-----------------------------------------------------------")
+
+        choice = get_valid_input("Your choice? ", ['b', 'p', 'l'])
+        
         if choice == 'b':
             cost = player['capacity'] * 2
             if player['GP'] >= cost:
                 player['GP'] -= cost
-                player['capacity'] += 2
-                print(f"Upgraded! New capacity: {player['capacity']}")
+                player['capacity'] +=2
+                print(f"Congratulations! You can now carry {player['capacity']} items!")
             else:
-                print("Not enough GP.")
+                print(f"Not enough GP. You need {cost} GP but only have {player['GP']} GP.")
+        elif choice == 'p':
+            upgrade_pickaxe(player)
         elif choice == 'l':
             break
 
 def show_information(player):
-    print("\n--- Player Info ---")
-    for ore in minerals:
-        print(f"{ore.title()}: {player[ore]}")
-    print(f"GP: {player['GP']}")
-    print(f"Steps: {player['steps']}, Load: {player['load']}/{player['capacity']}")
-    print(f"Location: ({player['x']}, {player['y']})")
+    print("\n--- Player Information ---")
+    print(f"Name: {player['name']}")
+    print(f"Current position: ({player['x']}, {player['y']})")
 
-def draw_map(game_map, fog, player):
+    #Pickaxe level display
+    pickaxe_level = player.get('pickaxe', 1)
+    if pickaxe_level == 1:
+        print("Pickaxe level:1 (copper)")
+    elif pickaxe_level == 2:
+        print("Pickaxe level: 2 (silver)")
+    elif pickaxe_level == 3:
+        print("Pickaxe level: 3 (gold)")
+
+    #Mineral counts
+    print(f"Gold: {player{'gold'}}")
+    print(f"Silver: {player['silver']}")
+    print(f"Copper: {player['copper']}")
+    print("------------------------------")
+    print(f"Load: {player['load']} / {player['capacity']}")
+    print("------------------------------")
+    print(f"GP: {player{'GP'}}")
+    print(f"Steps taken: {player['steps']}")
+    print("------------------------------")
+
+
+def draw_map(game_map,fog,player):
+    print()
     print("+" + "-" * MAP_WIDTH + "+")
-    for y in range(MAP_HEIGHT):
+    for y in range(MAP_HEIGHT)
         print("|", end="")
         for x in range(MAP_WIDTH):
             if x == player['x'] and y == player['y']:
                 print("M", end="")
-            elif (x, y) == player['portal']:
-                print("P", end="")
+            elif (x,y) == (0,0):
+                print("T", end="")
+            elif (x,y) == player['portal']:
+                print("p", end="")
             elif fog[y][x]:
                 print("?", end="")
             else:
                 print(game_map[y][x], end="")
         print("|")
     print("+" + "-" * MAP_WIDTH + "+")
+    print()
+
 
 def enter_mine(game_map, fog, player):
     print("\nEntering the mine...")
+    if player['portal'] !=(0,0):
+                    player['x'], player['y'] = player['portal']
+    else:
+        player['x'],player['y'] = 0,0
+                
     while player['turns'] > 0:
-        draw_map(game_map, fog, player)
-        print(f"Turns: {player['turns']}  Load: {player['load']}/{player['capacity']}  Steps: {player['steps']}")
-        action = input("(W/A/S/D) Move, (M)ap, (I)nfo, (P)ortal, (Q)uit: ").lower()
-        if action in ['w','a','s','d']:
-            dx, dy = 0, 0
-            if action == 'w': dy = -1
-            if action == 's': dy = 1
-            if action == 'a': dx = -1
-            if action == 'd': dx = 1
-            nx, ny = player['x'] + dx, player['y'] + dy
-            if 0 <= nx < MAP_WIDTH and 0 <= ny < MAP_HEIGHT:
-                tile = game_map[ny][nx]
-                if tile in mineral_names:
-                    if player['load'] < player['capacity']:
-                        ore = mineral_names[tile]
-                        amount = randint(1, 3)
-                        actual = min(amount, player['capacity'] - player['load'])
-                        print(f"Mined {actual} {ore}.")
-                        player[ore] += actual
-                        player['load'] += actual
-                    else:
-                        print("You are over-encumbered!")
-                elif tile == 'T':
-                    print("Returned to town.")
-                    break
-                player['x'], player['y'] = nx, ny
-                player['turns'] -= 1
-                player['steps'] += 1
-                clear_fog(fog, player)
-        elif action == 'm':
-            draw_map(game_map, fog, player)
-        elif action == 'i':
-            show_information(player)
-        elif action == 'p':
-            print("Using portal to return to town.")
-            player['portal'] = (player['x'], player['y'])
-            break
-        elif action == 'q':
-            return
-
-    if player['turns'] <= 0:
-        print("You collapsed from exhaustion! Returning to town.")
-        player['portal'] = (player['x'], player['y'])
-    total = sell_ore()
-    if total:
-        print(f"Sold ore for {total} GP. Total GP: {player['GP']}")
-    player['turns'] = TURNS_PER_DAY
-    player['day'] += 1
+          #Draw the viewport with border
+        print("+" + "-" * 3 + "+")
+        for dy in range(-1,2):
+              y = player['y'] + dy
+              print("|", end="")
+              for dx in range(-1,2):
+                  x = player['x'] + dx
+                  if 0 <= x < MAP_WIDTH and 0 <= y < MAP_HEIGHT:
+                     if dx ==0 and dy == 0:
+                          print("M", end="")
+                     elif (x,y) == player['portal']:
+                          print("P", end="")
+                     elif not fog[y][x]:
+                          print(game_map{y}{x}, end="")
+                     else:
+                          print("#", end="") # Use # for fogged areas in viewport
+                  else:
+                    print("#", end="") # Use # for out of bounds areas
+        print("|")
+        print("+" + "-" * 3 + "+")
+                  
+        print(f"Turns left: {player['turns']}] | Load: {player['load']}/{player['capacity']} | Steps: {player["steps"]}")
+        print("(WASD) to move")
+        print("(M)ap, (I)nformation, (P)ortal, (Q)uit to main menu")
+        action = get_valid_input("Action? ", ['w','a','s','d','m','i','p','q'])
 
 def sell_ore():
     total = 0
@@ -260,7 +282,7 @@ def main():
 
 main()
 
-# Advanced Feature 1: Input Validation (10 marks)
+
 def get_valid_input(prompt, valid_options):
     while True:
         choice = input(prompt).lower()
@@ -269,7 +291,6 @@ def get_valid_input(prompt, valid_options):
         else:
             print(f"Invalid option. Choose from {', '.join(valid_options).upper()}.")
 
-# Advanced Feature 2: Pickaxe Upgrade (10 marks)
 def get_pickaxe_level_name(level):
     return ['None', 'copper', 'silver', 'gold'][level]
 
@@ -288,7 +309,6 @@ def upgrade_pickaxe(player):
     else:
         print("Not enough GP to upgrade your pickaxe.")
 
-# Modify buy_stuff function to include Pickaxe Upgrade
 
 def buy_stuff(player):
     while True:
@@ -321,7 +341,6 @@ def buy_stuff(player):
         elif choice == 'l':
             break
 
-# Modify enter_mine to use pickaxe level restrictions
 
 def enter_mine(game_map, fog, player):
     print("\nEntering the mine...")
@@ -383,7 +402,6 @@ def enter_mine(game_map, fog, player):
     player['turns'] = TURNS_PER_DAY
     player['day'] += 1
 
-# Advanced Feature 3: Top Scores (5 marks)
 def save_score():
     scores = []
     try:
@@ -415,64 +433,12 @@ def view_top_scores():
     except FileNotFoundError:
         print("No scores yet.")
 
-# Modify main menu to include top scores
 
-def show_main_menu():
-    print("\n--- Main Menu ----")
-    print("(N)ew Game")
-    print("(L)oad Saved Game")
-    print("(T)op Scores")
-    print("(Q)uit Game")
-    print("------------------")
 
-# Update main game loop to handle top score
 
-def main():
-    global player, game_map, fog
-    print("---------------- Welcome to Sundrop Caves! ----------------")
-    print("You spent all your money to get the deed to a mine, a small")
-    print("  backpack, a simple pickaxe and a magical portal stone.")
-    print("\nHow quickly can you get the 500 GP you need to retire")
-    print("  and live happily ever after?")
-    print("------------------------------------------------------------")
 
-    game_state = 'main'
-    while True:
-        if game_state == 'main':
-            show_main_menu()
-            choice = get_valid_input("Your choice? ", ['n', 'l', 't', 'q'])
-            if choice == 'n':
-                initialize_game(game_map, fog, player)
-                player['pickaxe'] = 1
-                game_state = 'town'
-            elif choice == 'l':
-                if load_game():
-                    game_state = 'town'
-            elif choice == 't':
-                view_top_scores()
-            elif choice == 'q':
-                print("Goodbye!")
-                break
 
-        elif game_state == 'town':
-            show_town_menu()
-            choice = get_valid_input("Your choice? ", ['b', 'i', 'm', 'e', 'v', 'q'])
-            if choice == 'b':
-                buy_stuff(player)
-            elif choice == 'i':
-                show_information(player)
-            elif choice == 'm':
-                draw_map(game_map, fog, player)
-            elif choice == 'e':
-                enter_mine(game_map, fog, player)
-                if player['GP'] >= WIN_GP:
-                    print(f"\nYou earned {player['GP']} GP and retired in {player['day']} days!")
-                    save_score()
-                    game_state = 'main'
-            elif choice == 'v':
-                save_game()
-            elif choice == 'q':
-                game_state = 'main'
+    
 
 
 
