@@ -13,7 +13,7 @@ MAP_WIDTH = 0
 MAP_HEIGHT = 0
 
 TURNS_PER_DAY = 20
-WIN_GP >= 500
+WIN_GP = 500
 
 minerals = ['copper', 'silver', 'gold']
 mineral_names = {'C': 'copper', 'S': 'silver', 'G': 'gold'}
@@ -22,7 +22,8 @@ prices = {'copper': (1, 3), 'silver': (5, 8), 'gold': (10, 18)}
 def save_game(filename="savefile.json"):
     data = {
         "player": player,
-        "fog": fog
+        "fog": fog,
+        "game_map": game_map # Save the map state 
     }
     with open(filename, 'w') as f:
         json.dump(data, f)
@@ -35,13 +36,14 @@ def load_game(filename="savefile.json"):
         player.update(data["player"])
         fog.clear()
         fog.extend(data["fog"])
-        load_map("level1.txt", game_map)
-        print("Game loaded.")
+        game_map.clear()
+        game_map.extend(data["game_map"])
+    #Load the saved map state
+        print("Game loaded.")  
         return True
     except FileNotFoundError:
-        print("No save file found.")
+        print("No save file found")
         return False
-
 
 def load_map(filename, map_struct):
     global MAP_WIDTH, MAP_HEIGHT
@@ -52,6 +54,9 @@ def load_map(filename, map_struct):
         map_struct.append(list(line.rstrip('\n')))
     MAP_HEIGHT = len(map_struct)
     MAP_WIDTH = len(map_struct[0]) if MAP_HEIGHT > 0 else 0
+    # Ensure town is marked at (0,0)
+    if MAP_HEIGHT > 0 and MAP_WIDTH > 0:
+        game_map[0][0] = 'T'
 
 def clear_fog(fog, player):
     px, py = player['x'], player['y']
@@ -67,7 +72,9 @@ def initialize_game(game_map, fog, player):
     for row in game_map:
         fog.append([True] * len(row))
     player.clear()
-    player['name'] = input("Enter your name: ")
+    print("Greetings, miner! What is your name? ", end="")
+    player['name'] = input().strip()
+    print(f"Pleased to meet you, {player['name']}. Welcome to Sundrop Town!")
     player['x'] = 0
     player['y'] = 0
     player['copper'] = 0
@@ -86,15 +93,16 @@ def show_main_menu():
     print("\n--- Main Menu ----")
     print("(N)ew Game")
     print("(L)oad Saved Game")
-    print("(Q)uit Game")
+    print("(T)op Scores")
+    print("(Q)uit")
     print("------------------")
 
 def show_town_menu():
     print(f"\nDAY {player['day']}")
     print("----- Sundrop Town -----")
     print("(B)uy Stuff")
-    print("(I)nformation")
-    print("(M)ap")
+    print("See Player (I)nformation")
+    print("See Mine (M)ap")
     print("(E)nter Mine")
     print("Sa(V)e Game")
     print("(Q)uit to Main Menu")
@@ -465,3 +473,8 @@ def main():
                 save_game()
             elif choice == 'q':
                 game_state = 'main'
+
+
+
+
+    
