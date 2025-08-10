@@ -475,11 +475,26 @@ if __name__ == "__main__":
 
 import copy
 original_map = []  
-
+ 
+#Nodes Replenish
 def store_original_map():
     global original_map
     original_map = copy.deepcopy(game_map)
 
+def replenish_nodes():
+    """20% chance to replenish any mined node back to its original mineral."""
+    from random import random
+    for y in range(MAP_HEIGHT):
+        for x in range(MAP_WIDTH):
+            if game_map[y][x] == ' ' and original_map[y][x] in mineral_names:
+                if random() < 0.2:  # 20% chance
+                    game_map[y][x] = original_map[y][x]
+
+old_sell_ore = sell_ore
+def sell_ore():
+    total = old_sell_ore()
+    replenish_nodes()  
+    return total
 
 
 
