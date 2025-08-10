@@ -60,7 +60,7 @@ def load_map(filename, map_struct):
         lines = f.readlines()
     map_struct.clear()
     for line in lines:
-        map_struct.append(list(line.rstrip('\n')))
+        map_struct.append(list(line.rstrip('\n'))) #Takes a line from the file, removes the newline, splits it into individual characters, and adds that row to the map structure.
     MAP_HEIGHT = len(map_struct)
     MAP_WIDTH = len(map_struct[0]) if MAP_HEIGHT > 0 else 0
     # Ensure town is marked at (0,0)
@@ -534,10 +534,6 @@ def view_top_scores():
 
 if __name__ == "__main__": # structure scripts for both direct execution and safe reuse.
     main()
-
-
-
-
 
 
 
