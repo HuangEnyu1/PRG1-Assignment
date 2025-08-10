@@ -473,6 +473,20 @@ def view_top_scores():
 if __name__ == "__main__":
     main()
 
+import copy
+original_map = []  
+
+def store_original_map():
+    global original_map
+    original_map = copy.deepcopy(game_map)
+
+
+
+
+
+
+
+
 
         
            
