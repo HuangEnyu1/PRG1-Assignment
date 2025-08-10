@@ -19,17 +19,23 @@ minerals = ['copper', 'silver', 'gold']
 mineral_names = {'C': 'copper', 'S': 'silver', 'G': 'gold'}
 prices = {'copper': (1, 3), 'silver': (5, 8), 'gold': (10, 18)}
 
-def save_game(filename="savefile.json"):
+def save_game(filename="savefile.json"): 
+    # Save the current game state (player info, fog map, and mine map) into a JSON file
+    # Input: filename (string, optional) - file name to save game
+    # Output: None
     data = {
         "player": player,
         "fog": fog,
-        "game_map": game_map  # Save the map state too
+        "game_map": game_map # Save the map state too
     }
     with open(filename, 'w') as f:
         json.dump(data, f)
     print("Game saved.")
 
 def load_game(filename="savefile.json"):
+    # Load a previously saved game state from a JSON file
+    # Restores player data, fog of war, and mine map
+    # Returns True if loaded successfully, False if file not found
     try:
         with open(filename, 'r') as f:
             data = json.load(f)
@@ -38,7 +44,8 @@ def load_game(filename="savefile.json"):
         fog.extend(data["fog"])
         game_map.clear()
         game_map.extend(data["game_map"])
-  # Load the saved map state
+    # Load the saved map state
+ 
         print("Game loaded.")
         return True
     except FileNotFoundError:
@@ -46,6 +53,8 @@ def load_game(filename="savefile.json"):
         return False
 
 def load_map(filename, map_struct):
+    # Load the mine layout from a text file into the game map structure
+    # Updates global MAP_WIDTH and MAP_HEIGHT values
     global MAP_WIDTH, MAP_HEIGHT
     with open(filename, 'r') as f:
         lines = f.readlines()
@@ -59,6 +68,8 @@ def load_map(filename, map_struct):
         game_map[0][0] = 'T'
 
 def clear_fog(fog, player):
+    # Reveal tiles around the player's current position (3x3 area)
+    # This removes the fog in that area
     px, py = player['x'], player['y']
     for dy in range(-1, 2):
         for dx in range(-1, 2):
@@ -67,6 +78,7 @@ def clear_fog(fog, player):
                 fog[y][x] = False
 
 def initialize_game(game_map, fog, player):
+    # Start a new game by loading the map, clearing fog, and setting initial player stats
     load_map("level1.txt", game_map)
     fog.clear()
     for row in game_map:
@@ -90,6 +102,7 @@ def initialize_game(game_map, fog, player):
     clear_fog(fog, player)
 
 def show_main_menu():
+    # Display the main menu options to the player
     print("\n--- Main Menu ----")
     print("(N)ew Game")
     print("(L)oad Saved Game")
@@ -98,6 +111,7 @@ def show_main_menu():
     print("------------------")
 
 def show_town_menu():
+     # Display the town menu options for actions in Sundrop Town
     print(f"\nDAY {player['day']}")
     print("----- Sundrop Town -----")
     print("(B)uy Stuff")
@@ -109,6 +123,8 @@ def show_town_menu():
     print("------------------------")
 
 def buy_stuff(player):
+    # Allow the player to buy upgrades (backpack capacity or pickaxe)
+    # Loops until player chooses to leave shop
     while True:
         print("\n----------------------- Shop Menu -------------------------")
         level = player.get('pickaxe', 1)
@@ -144,6 +160,7 @@ def buy_stuff(player):
             break
 
 def show_information(player):
+     # Display the current player's information (stats, position, inventory)
     print("\n--- Player Information ---")
     print(f"Name: {player['name']}")
     print(f"Current position: ({player['x']}, {player['y']})")
@@ -170,6 +187,8 @@ def show_information(player):
     
 
 def draw_map(game_map, fog, player):
+      # Display the entire mine map with fog of war applied
+    # Shows player (M), town (T), portal (P), minerals, and fog (?)
     print()
     print("+" + "-" * MAP_WIDTH + "+")
     for y in range(MAP_HEIGHT):
@@ -191,6 +210,8 @@ def draw_map(game_map, fog, player):
 
 
 def enter_mine(game_map, fog, player):
+     # Main loop for when the player is inside the mine
+    # Handles movement, mining, turn countdown, exhaustion, and portal use
     print("\nEntering the mine...")
     if player['portal'] != (0, 0):
         player['x'], player['y'] = player['portal']
@@ -344,6 +365,8 @@ def enter_mine(game_map, fog, player):
     player['day'] += 1
 
 def sell_ore():
+     # Sell all minerals in the player's inventory for GP at random prices
+    # Resets load and ore counts after selling
     total = 0
     for ore in minerals:
         qty = player[ore]
@@ -360,6 +383,8 @@ def sell_ore():
     return total
 
 def main():
+    # Main entry point for the game
+    # Handles switching between menus and managing game state
     global player, game_map, fog
     print("---------------- Welcome to Sundrop Caves! ----------------")
     print("You spent all your money to get the deed to a mine, a small")
@@ -412,6 +437,8 @@ def main():
 
 # Advanced Feature 1: Input Validation (10 marks)
 def get_valid_input(prompt, valid_options):
+    # Get input from the player and ensure it is one of the valid options
+    # Keeps prompting until valid input is entered
     while True:
         choice = input(prompt).lower()
         if choice in valid_options:
@@ -421,9 +448,11 @@ def get_valid_input(prompt, valid_options):
 
 # Advanced Feature 2: Pickaxe Upgrade (10 marks)
 def get_pickaxe_level_name(level):
+     # Return the mineral type that a given pickaxe level can mine
     return ['None', 'copper', 'silver', 'gold'][level]
 
 def upgrade_pickaxe(player):
+    # Upgrade the player's pickaxe to the next level if enough GP is available
     level = player.get('pickaxe', 1)
     if level >= 3:
         print("Your pickaxe is already at max level!")
@@ -440,6 +469,7 @@ def upgrade_pickaxe(player):
 
 # Advanced Feature 3: Top Scores (5 marks)
 def save_score():
+     # Save the player's score (name, days, steps, GP) into top 5 scores list
     scores = []
     try:
         with open("scores.json", "r") as f:
@@ -460,6 +490,7 @@ def save_score():
         json.dump(scores, f)
 
 def view_top_scores():
+       # Display the top 5 scores from the scores.json file
     try:
         with open("scores.json", "r") as f:
             scores = json.load(f)
@@ -473,120 +504,8 @@ def view_top_scores():
 if __name__ == "__main__":
     main()
 
-import copy
-original_map = []  
- 
-#Nodes Replenish
-def store_original_map():
-    global original_map
-    original_map = copy.deepcopy(game_map)
-
-def replenish_nodes():
-    """20% chance to replenish any mined node back to its original mineral."""
-    from random import random
-    for y in range(MAP_HEIGHT):
-        for x in range(MAP_WIDTH):
-            if game_map[y][x] == ' ' and original_map[y][x] in mineral_names:
-                if random() < 0.2:  # 20% chance
-                    game_map[y][x] = original_map[y][x]
-
-old_sell_ore = sell_ore
-def sell_ore():
-    total = old_sell_ore()
-    replenish_nodes()  
-    return total
-
-#Magic Torch
-def buy_magic_torch(player):
-    cost = 50
-    if player.get('torch', False):
-        print("You already own the magic torch!")
-        return
-    if player['GP'] >= cost:
-        player['GP'] -= cost
-        player['torch'] = True
-        print("You bought the Magic Torch! Your vision expands!")
-    else:
-        print(f"Not enough GP. You need {cost} GP but only have {player['GP']} GP.")
 
 
-old_buy_stuff = buy_stuff
-def buy_stuff(player):
-    while True:
-        print("\n----------------------- Shop Menu -------------------------")
-        level = player.get('pickaxe', 1)
-        if level < 3:
-            upgrade_cost = 50 if level == 1 else 150
-            next_level_name = get_pickaxe_level_name(level + 1)
-            print(f"(P)ickaxe upgrade to Level {level + 1} to mine {next_level_name} ore for {upgrade_cost} GP")
-        current_capacity = player['capacity']
-        upgrade_cost = current_capacity * 2
-        new_capacity = current_capacity + 2
-        print(f"(B)ackpack upgrade to carry {new_capacity} items for {upgrade_cost} GP")
-        print("(T) Buy Magic Torch for 50 GP")
-        print("(L)eave shop")
-        print("-----------------------------------------------------------")
-        print(f"GP: {player['GP']}")
-        print("-----------------------------------------------------------")
-        choice = get_valid_input("Your choice? ", ['b', 'p', 't', 'l'])
-        if choice == 'b':
-            cost = player['capacity'] * 2
-            if player['GP'] >= cost:
-                player['GP'] -= cost
-                player['capacity'] += 2
-                print(f"Congratulations! You can now carry {player['capacity']} items!")
-            else:
-                print(f"Not enough GP. You need {cost} GP but only have {player['GP']} GP.")
-        elif choice == 'p':
-            upgrade_pickaxe(player)
-        elif choice == 't':
-            buy_magic_torch(player)
-        elif choice == 'l':
-            break
-
-old_enter_mine = enter_mine
-def enter_mine(game_map, fog, player):
-    viewport = 2 if player.get('torch', False) else 1  
-    print("\nEntering the mine...")
-    if player['portal'] != (0, 0):
-        player['x'], player['y'] = player['portal']
-    else:
-        player['x'], player['y'] = 0, 0
-
-    while player['turns'] > 0:
-       
-        print("+" + "-" * (viewport*2+1) + "+")
-        for dy in range(-viewport, viewport+1):
-            y = player['y'] + dy
-            print("|", end="")
-            for dx in range(-viewport, viewport+1):
-                x = player['x'] + dx
-                if 0 <= x < MAP_WIDTH and 0 <= y < MAP_HEIGHT:
-                    if dx == 0 and dy == 0:
-                        print("M", end="")
-                    elif (x, y) == player['portal']:
-                        print("P", end="")
-                    elif not fog[y][x]:
-                        print(game_map[y][x], end="")
-                    else:
-                        print("#", end="")
-                else:
-                    print("#", end="")
-            print("|")
-        print("+" + "-" * (viewport*2+1) + "+")
-        print(f"Turns left: {player['turns']} | Load: {player['load']}/{player['capacity']} | Steps: {player['steps']}")
-        print("(WASD) to move")
-        print("(M)ap, (I)nformation, (P)ortal, (Q)uit to main menu")
-        action = get_valid_input("Action? ", ['w','a','s','d','m','i','p','q'])
-      
-        return old_enter_mine(game_map, fog, player)
-
-
-old_initialize_game = initialize_game
-def initialize_game(game_map, fog, player):
-    old_initialize_game(game_map, fog, player)
-    store_original_map()
-    player['torch'] = False
 
 
 
