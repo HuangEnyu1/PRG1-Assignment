@@ -496,6 +496,53 @@ def sell_ore():
     replenish_nodes()  
     return total
 
+#Magic Torch
+def buy_magic_torch(player):
+    cost = 50
+    if player.get('torch', False):
+        print("You already own the magic torch!")
+        return
+    if player['GP'] >= cost:
+        player['GP'] -= cost
+        player['torch'] = True
+        print("You bought the Magic Torch! Your vision expands!")
+    else:
+        print(f"Not enough GP. You need {cost} GP but only have {player['GP']} GP.")
+
+
+old_buy_stuff = buy_stuff
+def buy_stuff(player):
+    while True:
+        print("\n----------------------- Shop Menu -------------------------")
+        level = player.get('pickaxe', 1)
+        if level < 3:
+            upgrade_cost = 50 if level == 1 else 150
+            next_level_name = get_pickaxe_level_name(level + 1)
+            print(f"(P)ickaxe upgrade to Level {level + 1} to mine {next_level_name} ore for {upgrade_cost} GP")
+        current_capacity = player['capacity']
+        upgrade_cost = current_capacity * 2
+        new_capacity = current_capacity + 2
+        print(f"(B)ackpack upgrade to carry {new_capacity} items for {upgrade_cost} GP")
+        print("(T) Buy Magic Torch for 50 GP")
+        print("(L)eave shop")
+        print("-----------------------------------------------------------")
+        print(f"GP: {player['GP']}")
+        print("-----------------------------------------------------------")
+        choice = get_valid_input("Your choice? ", ['b', 'p', 't', 'l'])
+        if choice == 'b':
+            cost = player['capacity'] * 2
+            if player['GP'] >= cost:
+                player['GP'] -= cost
+                player['capacity'] += 2
+                print(f"Congratulations! You can now carry {player['capacity']} items!")
+            else:
+                print(f"Not enough GP. You need {cost} GP but only have {player['GP']} GP.")
+        elif choice == 'p':
+            upgrade_pickaxe(player)
+        elif choice == 't':
+            buy_magic_torch(player)
+        elif choice == 'l':
+            break
 
 
 
