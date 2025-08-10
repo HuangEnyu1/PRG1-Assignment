@@ -224,6 +224,127 @@ def enter_mine(game_map, fog, player):
         print("(M)ap, (I)nformation, (P)ortal, (Q)uit to main menu")
         action = get_valid_input("Action? ", ['w','a','s','d','m','i','p','q'])
 
+        if action in ['w','a','s','d']
+            dx, dy =0, 0
+            if action == 'w': dy = -1
+            elif action == 's': dy = 1
+            elif action == 'a': dx = -1
+            elif action == 'd': dx = 1
+
+            nx, ny = player['x'] + dx, player['y'] + dy
+
+            # Check if new position is within bounds
+            if 0 <= nx < MAP_WIDTH and 0 <= ny < MAP_HEIGHT:
+                tile = game_map[ny][nx]
+
+                # Check if stepping onto town tile
+                if tile == 'T' and nx ==0 and ny==0:
+                    print("Returned to town.")
+                    sell_ore()
+                    player['turns']= TURNS_PER_DAY
+                    player['day'] += 1
+                    return
+                
+                # Mining logic
+                can_mine = mineral_names.get(tile. '') in minerals[:player.get('pickaxe',1)]
+                if tile in mineral_names:
+                    if not can_mine:
+                        print("Your pickaxe is not strong enough to mine this ore!")
+                        player['turns'] -= 1
+                        continue
+                    if player['load'] >= player['capacity']
+                        print()
+                        print("---------------------------------------------------")
+                        print("You can't carry any more, so you can't go that way.")
+                        player['turns'] -= 1
+                        if player['turns'] <= 0:
+                            print("You are exhausted")
+                            print("You place your portal stone here and zap back to town")
+                            player['portal'] = (player['x'], player['y'])
+                            sell_ore()
+                            player['turns'] = TURNS_PER_DAY
+                            player['day'] += 1
+                            return
+                        continue
+
+                    ore = mineral_names[tile]
+                    amount = randint(1, 5 if ore == 'copper' else (3 if ore == 'silver' else 2))
+                    actual = min(amount, player['capacity'] - player['load'])
+                    if actual < amount:
+                        print(f"You mined {amount} piece(s) of {ore}.")
+                        print(f"...but you can only carry {actual} more piece(s)!")
+                    else:
+                        print(f"You mined {actual} piece(s) of {ore}.")
+                    player[ore] +- actual
+                    player['load'] +- actual
+                    game_map[ny][nx] = ' '
+
+                # Move the player
+                player['x'], player['y'] = nx,ny
+                player['turns'] -= 1
+                player['steps'] += 1
+                clear_fog(fog, player)
+                
+                # Check if turns ran out
+                if player['turns'] <= 0:
+                    print("You are exhausted.")
+                    print("You place your portal stone here and zap back to town.")
+                    player['portal']= (player['x'], player['y'])
+                    sell_ore()
+                    player['turns'] = TURNS_PER_DAY
+                    player['day'] += 1
+                    return
+            else:
+                print("You can't move outside the mine!")
+                print['turns'] -= 1
+
+        elif action == 'p':
+            print()
+            print("-----------------------------------------------------")
+            print("You place your portal stone here and zap back to town.")
+            player['portal'] = (player['x'], player['y'])
+            sell_ore()
+            player['turns'] = TURNS_PER_DAY
+            player['day'] += 1
+            return
+        
+        elif action == 'm':
+            draw_map(game_map, fog,player)
+        elif action == 'i':
+            show_information(player)
+        elif action == 'q':
+            return
+        
+        #If turns run out (defensive check)
+        if player['turns'] <= 0:
+            print("You collapsed from exhaustion! Returning to town.")
+            player['portal'] = (player['x'], player['y'])
+            sell_ore()
+            player['turns'] = TURNS_PER_DAY
+            player['day'] += 1
+
+        elif action== 'p':
+                  print("You place your portal stone here and zap back to town.")
+                  player['portal'] = (player['x'], player['y'])
+                  if game_map[player['y']][player['x']] == 'M':
+                      game_map[player['y']][player['x']] = 'P'
+                      sell_ore()
+                      player['turns'] = TURNS_PER_DAY
+                      player['day'] += 1
+                      return
+                  
+        elif action == 'm':
+                draw_map(game_map, fog, player)
+
+        if player['turns'] <= 0:
+            print("You collapsed from exhaustion! Returning to town.")
+            player['portal'] = (player['x'], player['y'])
+        total = sell_ore()
+        player['turns'] = TURNS_PER_DAY
+        player['day'] += 1
+
+                        
+                                 
 def sell_ore():
     total = 0
     for ore in minerals:
