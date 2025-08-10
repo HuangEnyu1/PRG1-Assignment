@@ -214,11 +214,13 @@ def enter_mine(game_map, fog, player):
     # Handles movement, mining, turn countdown, exhaustion, and portal use
     print("\nEntering the mine...")
     if player['portal'] != (0, 0):
+    # If the portal is set somewhere in the mine, start at that location instead of town
         player['x'], player['y'] = player['portal']
     else:
         player['x'], player['y'] = 0, 0
 
     while player['turns'] > 0:
+        # Keep looping while the player still has turns left for the day
         # Draw the viewport with border
         print("+" + "-" * 3 + "+")
         for dy in range(-1, 2):
@@ -238,9 +240,10 @@ def enter_mine(game_map, fog, player):
                 else:
                     print("#", end="")  # Use # for out of bounds areas
             print("|")
-        print("+" + "-" * 3 + "+")
+        print("+" + "-" * 3 + "+") # Draws the border of the 3x3 viewport player sees in mine
         
         print(f"Turns left: {player['turns']} | Load: {player['load']}/{player['capacity']} | Steps: {player['steps']}")
+        #Uses an f-string to show turns left, load versus capacity, and total steps, separated by vertical bars.
         print("(WASD) to move")
         print("(M)ap, (I)nformation, (P)ortal, (Q)uit to main menu")
         action = get_valid_input("Action? ", ['w','a','s','d','m','i','p','q'])
@@ -260,8 +263,10 @@ def enter_mine(game_map, fog, player):
                 
                 # Check if stepping onto town tile
                 if tile == 'T' and nx == 0 and ny == 0:
+                     # Stepping on town square: return to town, sell ore, reset turns, and go to next day
                     print("Returned to town.")
                     sell_ore()
+                # Sell all collected ore when returning to town or using portal
                     player['turns'] = TURNS_PER_DAY
                     player['day'] += 1
                     return
@@ -270,19 +275,23 @@ def enter_mine(game_map, fog, player):
                 can_mine = mineral_names.get(tile, '') in minerals[:player.get('pickaxe', 1)]
                 if tile in mineral_names:
                     if not can_mine:
+                        # Player's pickaxe level is too low to mine this mineral
                         print("Your pickaxe is not strong enough to mine this ore!")
                         player['turns'] -= 1
                         continue
                     if player['load'] >= player['capacity']:
+                         # Backpack is full: cannot mine or step onto more minerals
                         print()
                         print("---------------------------------------------------")
                         print("You can't carry any more, so you can't go that way.")
                         player['turns'] -= 1
                         if player['turns'] <= 0:
+                        # No turns left: player is exhausted, automatically return to town
                             print("You are exhausted.")
                             print("You place your portal stone here and zap back to town.")
                             player['portal'] = (player['x'], player['y'])
                             sell_ore()
+                          # Sell all collected ore when returning to town or using portal
                             player['turns'] = TURNS_PER_DAY
                             player['day'] += 1
                             return
@@ -290,6 +299,7 @@ def enter_mine(game_map, fog, player):
                         
                     ore = mineral_names[tile]
                     amount = randint(1, 5 if ore == 'copper' else (3 if ore == 'silver' else 2))
+                         # Randomly determine how many pieces of ore are mined based on mineral type
                     actual = min(amount, player['capacity'] - player['load'])
                     if actual < amount:
                         print(f"You mined {amount} piece(s) of {ore}.")
@@ -299,19 +309,23 @@ def enter_mine(game_map, fog, player):
                     player[ore] += actual
                     player['load'] += actual
                     game_map[ny][nx] = ' '
+                       # Remove the mined ore from the map so it can't be mined again
                 
                 # Move the player
                 player['x'], player['y'] = nx, ny
                 player['turns'] -= 1
                 player['steps'] += 1
+                # Increase total steps taken by player
                 clear_fog(fog, player)
                 
                 # Check if turns ran out
                 if player['turns'] <= 0:
+                     # No turns left: player is exhausted, automatically return to town
                     print("You are exhausted.")
                     print("You place your portal stone here and zap back to town.")
                     player['portal'] = (player['x'], player['y'])
                     sell_ore()
+                    # Sell all collected ore when returning to town or using portal
                     player['turns'] = TURNS_PER_DAY
                     player['day'] += 1
                     return
@@ -325,6 +339,7 @@ def enter_mine(game_map, fog, player):
             print("You place your portal stone here and zap back to town.")
             player['portal'] = (player['x'], player['y'])
             sell_ore()
+               # Sell all collected ore when returning to town or using portal
             player['turns'] = TURNS_PER_DAY
             player['day'] += 1
             return
@@ -338,18 +353,23 @@ def enter_mine(game_map, fog, player):
 
     # If turns run out (defensive check)
     if player['turns'] <= 0:
+         # No turns left: player is exhausted, automatically return to town
         print("You collapsed from exhaustion! Returning to town.")
         player['portal'] = (player['x'], player['y'])
         sell_ore()
+         # Sell all collected ore when returning to town or using portal
         player['turns'] = TURNS_PER_DAY
         player['day'] += 1
         
     elif action == 'p':
              print("You place your portal stone here and zap back to town.")
-             player['portal'] = (player['x'], player['y'])
+             player['portal'] = (player['x'], player['y']) # Updates the portal's position to the player's current coordinates so players start from here next time
              if game_map[player['y']][player['x']] == 'M':  
+                #Checks if the current map tile at the player's position is marked as 'M' (player marker)
                 game_map[player['y']][player['x']] = 'P'
+                #If the above condition is true, changes that map tile to 'P' (portal marker)
              sell_ore()
+             # Sell all collected ore when returning to town or using portal
              player['turns'] = TURNS_PER_DAY
              player['day'] += 1
              return
@@ -358,6 +378,7 @@ def enter_mine(game_map, fog, player):
             draw_map(game_map, fog, player)
 
     if player['turns'] <= 0:
+         # No turns left: player is exhausted, automatically return to town
         print("You collapsed from exhaustion! Returning to town.")
         player['portal'] = (player['x'], player['y'])
     total = sell_ore()
@@ -365,7 +386,8 @@ def enter_mine(game_map, fog, player):
     player['day'] += 1
 
 def sell_ore():
-     # Sell all minerals in the player's inventory for GP at random prices
+     # Sell all collected ore when returning to town or using portal
+    # Sell all minerals in the player's inventory for GP at random prices
     # Resets load and ore counts after selling
     total = 0
     for ore in minerals:
@@ -444,7 +466,7 @@ def get_valid_input(prompt, valid_options):
         if choice in valid_options:
             return choice
         else:
-            print(f"Invalid option. Choose from {', '.join(valid_options).upper()}.")
+            print(f"Invalid option. Choose from {', '.join(valid_options).upper()}.") # This line dynamically generates a clear error message listing all valid input options in uppercase when the user provides invalid input
 
 # Advanced Feature 2: Pickaxe Upgrade (10 marks)
 def get_pickaxe_level_name(level):
@@ -470,38 +492,47 @@ def upgrade_pickaxe(player):
 # Advanced Feature 3: Top Scores (5 marks)
 def save_score():
      # Save the player's score (name, days, steps, GP) into top 5 scores list
-    scores = []
+    scores = [] # Create an empty list to hold existing scores
     try:
+        # Try to read exisitng scores from the JSON File
         with open("scores.json", "r") as f:
-            scores = json.load(f)
-    except FileNotFoundError:
+            scores = json.load(f) # Load the scores into the list 
+    except FileNotFoundError: # If file does not exist, nothing will be done 
         pass
-
+    # Add the current player's stats to the scores list
     scores.append({
-        'name': player['name'],
-        'days': player['day'],
-        'steps': player['steps'],
-        'GP': player['GP']
+        'name': player['name'], # Player's name
+        'days': player['day'],  # Total days taken to win
+        'steps': player['steps'],# Total steps taken in the game
+        'GP': player['GP']       # Total GP earned at game end 
     })
 
+     # Sort scores by:
+    # 1. Fewest days (ascending)
+    # 2. Fewest steps (ascending) if days are the same
+    # 3. Most GP (descending) if both days and steps are the same
     scores = sorted(scores, key=lambda x: (x['days'], x['steps'], -x['GP']))[:5]
+    # Keep only the top 5 scores
 
+    # Save the updated top 5 scores back to scores.json
     with open("scores.json", "w") as f:
-        json.dump(scores, f)
+        json.dump(scores, f) # Write the scores list to the file in JSON format
 
 def view_top_scores():
        # Display the top 5 scores from the scores.json file
-    try:
+
+    try:# Try to read the scores from file 
         with open("scores.json", "r") as f:
-            scores = json.load(f)
+            scores = json.load(f) 
+        # Display the scores in a readable format
         print("\nTop 5 Scores:")
         print("-----------------------------")
-        for idx, s in enumerate(scores, 1):
+        for idx, s in enumerate(scores, 1): # idx is the ranking number (1st, 2nd, 3rd, etc.)
             print(f"{idx}. {s['name']} - {s['days']} days, {s['steps']} steps, {s['GP']} GP")
     except FileNotFoundError:
         print("No scores yet.")
 
-if __name__ == "__main__":
+if __name__ == "__main__": # structure scripts for both direct execution and safe reuse.
     main()
 
 
