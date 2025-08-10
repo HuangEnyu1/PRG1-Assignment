@@ -544,6 +544,49 @@ def buy_stuff(player):
         elif choice == 'l':
             break
 
+old_enter_mine = enter_mine
+def enter_mine(game_map, fog, player):
+    viewport = 2 if player.get('torch', False) else 1  
+    print("\nEntering the mine...")
+    if player['portal'] != (0, 0):
+        player['x'], player['y'] = player['portal']
+    else:
+        player['x'], player['y'] = 0, 0
+
+    while player['turns'] > 0:
+       
+        print("+" + "-" * (viewport*2+1) + "+")
+        for dy in range(-viewport, viewport+1):
+            y = player['y'] + dy
+            print("|", end="")
+            for dx in range(-viewport, viewport+1):
+                x = player['x'] + dx
+                if 0 <= x < MAP_WIDTH and 0 <= y < MAP_HEIGHT:
+                    if dx == 0 and dy == 0:
+                        print("M", end="")
+                    elif (x, y) == player['portal']:
+                        print("P", end="")
+                    elif not fog[y][x]:
+                        print(game_map[y][x], end="")
+                    else:
+                        print("#", end="")
+                else:
+                    print("#", end="")
+            print("|")
+        print("+" + "-" * (viewport*2+1) + "+")
+        print(f"Turns left: {player['turns']} | Load: {player['load']}/{player['capacity']} | Steps: {player['steps']}")
+        print("(WASD) to move")
+        print("(M)ap, (I)nformation, (P)ortal, (Q)uit to main menu")
+        action = get_valid_input("Action? ", ['w','a','s','d','m','i','p','q'])
+      
+        return old_enter_mine(game_map, fog, player)
+
+
+old_initialize_game = initialize_game
+def initialize_game(game_map, fog, player):
+    old_initialize_game(game_map, fog, player)
+    store_original_map()
+    player['torch'] = False
 
 
 
